@@ -1,0 +1,21 @@
+library(data.table)
+library(readxl)
+library(dplyr)
+library(rpart)
+library(rpart.plot)
+library(lubridate)
+library(stringr)
+library(car)
+library(MLmetrics)
+library(e1071)
+train$離職與否 <-as.factor(train$離職與否)
+summary(hr.dt201903)
+model<- svm( 離職與否 ~案件催辦次數_3m + 特休時數_2m + 
+               年資 + 婚姻名稱 + 姓別代號 + `台成清交(最高)` + `理工科系(最高)` + 
+               特休時數_3m, data = train)
+summary(model)
+test$離職與否 <-as.factor(test$離職與否)
+pred <- predict(model,  test)
+new_pred <- ifelse(pred > 0.93 , 1, 0)
+
+F1 <- F1_Score(y_pred = new_pred, y_true = test201903$離職與否, positive = 1)
