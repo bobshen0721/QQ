@@ -10,15 +10,36 @@
 ```bash
 pip install -r requirements.txt
 python -m playwright install chromium
+# 強烈建議再裝本機 Chrome，可大幅降低被 Cloudflare 攔下的機率：
+python -m playwright install chrome
 ```
 
 ### 使用
 
 ```bash
-python findbiz_pdf.py 04595257                 # 預設輸出到 ./output
-python findbiz_pdf.py 04595257 -o ~/Downloads  # 自訂輸出位置
-python findbiz_pdf.py 04595257 --headed        # 顯示瀏覽器 (除錯)
+# 第一次：建議用 --headed，若被 Cloudflare 攔下手動點過驗證，
+# 通過後會自動把 session 寫到 findbiz_state.json
+python findbiz_pdf.py 04595257 --headed
+
+# 之後正常跑 (帶上次的 session，通常免再驗證)
+python findbiz_pdf.py 04595257
+
+python findbiz_pdf.py 04595257 -o ~/Downloads          # 自訂輸出位置
+python findbiz_pdf.py 04595257 --channel chrome        # 強制用本機 Chrome
+python findbiz_pdf.py 04595257 --state my_session.json # 自訂 session 檔
 ```
+
+### Cloudflare 驗證
+
+findbiz 在前面掛了 Cloudflare bot challenge，原始 Playwright 一定會被擋。
+本腳本已做好以下處理：
+
+1. 優先用本機 **Google Chrome**（`--channel chrome`），不用 Chrome for Testing
+2. 啟動時移除 `--enable-automation`、注入 stealth script 蓋掉 `navigator.webdriver`
+3. 偵測到驗證頁時：`--headed` 會等你手動點通過，無頭模式會直接報錯提示
+4. 通過驗證後把 cookies 存到 `findbiz_state.json`，下次自動載入
+
+如果還是被擋，最務實的做法：用 `--headed` 跑一次 → 手動點過 → 之後用 headless。
 
 輸出檔名格式：
 
